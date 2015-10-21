@@ -40,7 +40,9 @@ angular.module('myBox.services.db', ['ngCordova.plugins.sqlite'])
         var deferred = $q.defer();
         db.transaction(function(tx) {
           for(var i = 0; i <sqlAry.length; i++) {
+            console.log(["exec sql", sqlAry[i]]);
             if(i == sqlAry.length - 1) {
+
               tx.executeSql(sqlAry[i], [], function(contexts, results){
                 // TODO: when success, the callback is not called
                 console.log(results);
@@ -87,14 +89,16 @@ angular.module('myBox.services.db', ['ngCordova.plugins.sqlite'])
          // update records in room with the new roomtype
           sqls.push("UPDATE rooms set roomType = (select typeId from roomTypes order by typeId desc limit 1) where roomId="+ roomId +"");
           // copy the first depth of nodes(depth=0) in roomstructures with the given roomtypeid
-          sqls.push("insert into roomStructures(sNode, parentId, parentPath, depth, isTemplate, roomTypeId) select a.sNode, a.parentId, a.parentPath, a.depth, 0, b.typeId from roomStructures a, (select typeId from roomtypes order by typeId desc limit 1) b where a.roomTypeId="+ roomType +"");
+          sqls.push("insert into roomStructures(sNode, parentId, parentPath, depth, isTemplate, roomTypeId) " +
+            "select a.sNode, a.parentId, a.parentPath, a.depth, 0, b.typeId from roomStructures a, " +
+            "(select typeId from roomtypes order by typeId desc limit 1) b where a.roomTypeId="+ roomType +" and a.depth=0");
 
           //insert into roomstructures the nodes copy from given template roomtype(the depth=1 nodes)
           sqls.push("insert into roomstructures(sNode, parentId, parentpath, depth, istemplate, roomtypeid) " +
             "select a.sNode, c.sId, c.parentpath||','||c.sId, a.depth, 0, d.typeId from roomstructures a join roomstructures b on b.sid = a.parentid " +
             "join (select typeId from roomtypes order by typeId desc limit 1) d " +
             "join  roomstructures c on c.[sNode] = b.[sNode] and c.[roomTypeId]=d.typeId " +
-            "where a.parentid in (select sid from roomstructures where roomTypeId="+ roomType +") ");
+            "where a.parentid in (select sid from roomstructures where roomTypeId="+ roomType +" and depth = 0) ");
 
           // copy nodes from roomstructures to roomstructures for the new roomtype id from template roomtype id(the depth=2 nodes)
           sqls.push("insert into roomstructures(sNode, parentId, parentpath, depth, istemplate, roomtypeid) " +
