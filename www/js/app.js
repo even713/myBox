@@ -31,16 +31,67 @@ angular.module('myBox', ['ionic', 'myBox.controllers', 'myBox.services'])
   // Each state's controller can be found in controllers.js
   $stateProvider
 
-   //setup an abstract state for the tabs directive
-    .state('myBoxes', {
+   /* myBoxes */
+  .state('myBoxes', {
+    abstract: true,
     url: '/myBoxes',
     views: {
       'appContent' :{
-        templateUrl: "views/myBoxes.html",
+        templateUrl: "views/myBoxes/myBoxes.html",
         controller : "myBoxCtrl"
       }
     }
-  });
+  })
+    .state('myBoxes.list', {
+      url: '/list',
+      views: {
+        'myBoxes' :{
+          templateUrl: "views/myBoxes/myBoxes.list.html"
+        }
+      }
+    })
+
+    .state('myBoxes.newBox', {
+      url: '/newBox',
+      views: {
+        'myBoxes' :{
+          templateUrl: "views/myBoxes/newBoxes.html"
+        }
+      }
+    })
+    .state('myBoxes.roomsType', {
+      url: '/roomsType',
+      views: {
+        'myBoxes' :{
+          templateUrl: "views/myBoxes/myBoxes.roomsType.html",
+          controller: "myBoxesRoomsTypeCtrl"
+        }
+      }
+    })
+
+  /* My Items */
+  .state('myItems', {
+    url: '/myItems',
+    views: {
+      'appContent' :{
+        templateUrl: "views/myItems/myItems.html",
+        controller : "myItemsCtrl"
+      }
+    }
+  })
+
+  /* My Houses*/
+  .state('myHouse', {
+    url: '/myHouse',
+    views: {
+      'appContent' :{
+        templateUrl: "views/myHouse/myHouse.html",
+        controller : "myHouseCtrl"
+      }
+    }
+  })
+
+  ;
 
   // Each tab has its own nav history stack:
 
@@ -84,6 +135,6 @@ angular.module('myBox', ['ionic', 'myBox.controllers', 'myBox.services'])
   //});
 
   // if none of the above states are matched, use this as the fallback
-  $urlRouterProvider.otherwise('/myBoxes');
+  $urlRouterProvider.otherwise('/myBoxes/list');
 
 });

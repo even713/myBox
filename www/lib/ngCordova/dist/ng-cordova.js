@@ -5952,9 +5952,11 @@ angular.module('ngCordova.plugins.sqlite', [])
           options.bgType = background;
         }
 
-        if (window.cordova) {
+        if (window.cordova && $window.sqlitePlugin) {
+          console.log("sqlitePlugin database");
           return $window.sqlitePlugin.openDatabase(options);
         }else{
+          console.log("window database");
           return window.openDatabase(options.name, '1', 'test description', 1024 * 1024 * 100); // browser
         }
 

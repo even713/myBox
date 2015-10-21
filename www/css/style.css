@@ -1,1 +1,33 @@
 /* Empty. Add your own CSS if you like */
+
+/* page layout */
+.my-boxes-app .item {
+  padding-top: 8px;
+  padding-bottom: 7px;
+  border: none;
+}
+
+.my-boxes-app ion-item.item {
+  border-bottom: 1px solid #ddd;
+}
+
+
+/*my boxes page*/
+.my-boxes .boxes-container>div{
+  float: left;
+}
+.my-boxes .boxes-container>div .house-text{
+  text-align: center;
+}
+.my-boxes .boxes-container img{
+  width: 128px;
+}
+
+.my-boxes .new-boxes input[type=text] {
+  border: 1px solid #ccc;
+}
+
+.my-boxes .room-types .room-item{
+  border-bottom: 1px solid #000;
+  margin-top: 2px;
+}

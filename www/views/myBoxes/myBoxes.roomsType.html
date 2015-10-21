@@ -1,0 +1,11 @@
+<ion-view view-title="请选择房型">
+  <ion-content class="padding">
+    <div class="room-types">
+      <div class="list">
+        <div class="room-item" ng-repeat="roomType in roomsTypes">
+          <ion-radio ng-click="createBox()" ng-model="new.roomType" ng-value="roomType.typeId">{{roomType.typesName}}</ion-radio>
+        </div>
+      </div>
+    </div>
+  </ion-content>
+</ion-view>

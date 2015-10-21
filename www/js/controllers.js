@@ -5,11 +5,17 @@ angular.module('myBox.controllers', [])
       myBoxDB.initData();
     }
   })
-  /*.controller('appController', function($scope, $ionicSideMenuDelegate) {
-    $scope.toggleLeft = function() {
-      $ionicSideMenuDelegate.toggleLeft();
-    };
-  })*/
+  .controller('appController', function($scope, $ionicSideMenuDelegate, myBoxDB) {
+    $scope.menus = [
+      {name: "我的物品", href: "/myItems", icon: "ion-filing"},
+      {name: "我的房间", href: "/myHouse", icon: "ion-home"},
+      {name: "我的收纳本组", href: "/myBoxes/list", icon: "ion-ios-box"}
+    ];
+
+    $scope.initData = function(){
+      myBoxDB.initData();
+    }
+  })
 
 .controller('ChatsCtrl', function($scope, Chats) {
   // With the new view caching in Ionic, Controllers are only called
