@@ -1,4 +1,4 @@
-angular.module('myBox.services', ['myBox.services.db'])
+angular.module('myBox.services', ['myBox.services.db', 'myBox.services.log'])
 
 .factory('Chats', function() {
   // Might use a resource here that returns a JSON array

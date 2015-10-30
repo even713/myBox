@@ -1,28 +1,29 @@
 /**
  * Created by Cara on 2015/10/2.
  */
-angular.module('myBox.services.db', ['ngCordova.plugins.sqlite'])
-.factory('myBoxDB', ['$cordovaSQLite', '$q', function($cordovaSQLite, $q){
-    var db = $cordovaSQLite.openDB({ name: "myBox.db", createFromLocation: 1 });
-    if($.isEmptyObject(db)) {
-      //console.log("db is emtpy initialize db...");
-      this.initData();
-    }
-    return{
+angular.module('myBox.services.db', ['ngCordova.plugins.sqlite', 'myBox.services.log'])
+.factory('myBoxDB', ['$cordovaSQLite', '$q', 'clog', function($cordovaSQLite, $q, clog){
+    var db;
+    //this.initData();
+    var dbFn = {
+      open: function(){
+        clog.log("open db");
+        db = $cordovaSQLite.openDB({ name: "myBox.db", createFromLocation: 1 });
+      },
       query: function(query, values, callback){
         var deferred = $q.defer();
         $cordovaSQLite.execute(db, query, values).then(function(res) {
           if(res.rows.length > 0) {
-            console.log("select query");
-            //console.log("SELECTED -> " + res.rows.item(0).firstname + " " + res.rows.item(0).lastname);
+            clog.log("select query");
+            //clog.log("SELECTED -> " + res.rows.item(0).firstname + " " + res.rows.item(0).lastname);
             deferred.resolve({rows: res.rows});
           } else {
             if(res.rowsAffected == 0) {
-              console.log(["what's type of the query?", query]);
+              clog.log(["what's type of the query?", query]);
               deferred.resolve({rows: []});
             } else {
               if(res.insertId) {
-                console.log("insert/update query");
+                clog.log("insert/update query");
                 deferred.resolve({insertId: res.insertId, rows:[]});
               }
             }
@@ -30,7 +31,7 @@ angular.module('myBox.services.db', ['ngCordova.plugins.sqlite'])
           }
 
         }, function (err) {
-          console.error(err);
+          clog.error(err);
           deferred.reject({err: true});
         });
         return deferred.promise;
@@ -40,15 +41,15 @@ angular.module('myBox.services.db', ['ngCordova.plugins.sqlite'])
         var deferred = $q.defer();
         db.transaction(function(tx) {
           for(var i = 0; i <sqlAry.length; i++) {
-            console.log(["exec sql", sqlAry[i]]);
+            clog.log(["exec sql", sqlAry[i]]);
             if(i == sqlAry.length - 1) {
 
               tx.executeSql(sqlAry[i], [], function(contexts, results){
                 // TODO: when success, the callback is not called
-                console.log(results);
+                clog.log(results);
                 deferred.resolve(results);
               }, function(sqlTrans, sqlErr){
-                console.log(sqlErr.message);
+                clog.log(sqlErr.message);
                 return true;
               });
             } else {
@@ -64,13 +65,23 @@ angular.module('myBox.services.db', ['ngCordova.plugins.sqlite'])
           console.log("error when query data from rooms");
         });
         /*this.query("SELECT memberId, memberName from members").then(callback, function(){
-          console.log("error when query data from rooms");
+          clog.log("error when query data from rooms");
         });*/
       },
 
       queryRoomsTypes: function(callback){
         this.query("SELECT typeId, typesName from roomTypes where istemplate=1").then(callback, function(){
           console.log("error when query data from roomsType");
+        });
+      },
+
+      queryRoomStructure: function(roomTypeId, callback){
+        if(!roomTypeId) {
+          console.log("roomTypeId is undefined");
+          return;
+        }
+        this.query("SELECT sid, snode, parentid, parentpath, depth from roomstructures where roomtypeid="+ roomTypeId +"").then(callback, function(){
+          console.log("error when query data from roomstructures");
         });
       },
 
@@ -107,12 +118,41 @@ angular.module('myBox.services.db', ['ngCordova.plugins.sqlite'])
             "join  roomstructures c on c.[sNode] = b.[sNode] and c.[roomTypeId]=d.typeId " +
             "where a.parentid in (select sid from roomstructures where roomTypeId="+ roomType +") and a.depth=2");
 
+          // make a default location for entering goods
+          sqls.push("update roomstructures set isDefault=1 where sId in (select sId from roomstructures where roomtypeId in (select typeId from roomtypes order by typeId desc limit 1) order by sId limit 1)");
+
           that.transaction(sqls).then(function(results){
             callback && callback();
           });
         }, function(){
           console.log("error when create room");
         });
+      },
+
+      queryDefaultRoom: function(callback){
+        this.query("SELECT a.roomId, a.roomName, c.sId, c.[sNode], c.roomTypeId, d.gTypeId, d.gTypeName from rooms a join roomTypes b on b.[roomId] = a.[roomId] " +
+          "join roomStructures c on c.[roomTypeId]=b.[typeId] join goodsTypes d where a.isDefault = 1 and c.[isDefault]=1 and d.[isDefault] = 1")
+          .then(callback, function(){
+            console.log("error when query data from my rooms");
+        });
+      },
+
+      updateDefaultLocal: function(oldId, newId, callback){
+        var sqls = [];
+        sqls.push("update roomStructures set isDefault = 0 where sId="+ oldId +";");
+        sqls.push("update roomStructures set isDefault = 1 where sId="+ newId +";");
+        this.transaction(sqls).then(function(){
+          callback && callback();
+        }, function(){
+          console.log("error when update default in roomstrucure");
+        });
+      },
+
+      queryGoodsType: function (callback) {
+        this.query("select gTypeid, gTypeName from goodsTypes")
+          .then(callback, function(){
+            console.log("error when query data from goodstype");
+          });
       },
 
       initData: function () {
@@ -125,35 +165,46 @@ angular.module('myBox.services.db', ['ngCordova.plugins.sqlite'])
 
         /* roomStructures table*/
         this.query("DROP TABLE IF EXISTS roomStructures");
-        this.query("CREATE TABLE IF NOT EXISTS roomStructures (sId integer primary key, sNode text, parentId integer, parentpath text, depth integer, isTemplate integer, roomTypeId integer)");
+        this.query("CREATE TABLE IF NOT EXISTS roomStructures (sId integer primary key, sNode text, parentId integer, parentpath text, depth integer, isTemplate integer, roomTypeId integer, isDefault integer)");
         // insert data
-        this.query("INSERT INTO roomStructures (sNode, parentId, parentPath,depth, isTemplate, roomTypeId) VALUES (?,?,?,?,?)", ["客厅", 0, "0", 0, 1, 1]);
+        this.query("INSERT INTO roomStructures (sId, sNode, parentId, parentPath,depth, isTemplate, roomTypeId) VALUES (?,?,?,?,?)", ["客厅", 0, "0", 0, 1, 1]);
         this.query("INSERT INTO roomStructures (sNode, parentId, parentPath,depth, isTemplate, roomTypeId) VALUES (?,?,?,?,?)", ["卧室", 0, "0", 0, 1, 1]);
         this.query("INSERT INTO roomStructures (sNode, parentId, parentPath,depth, isTemplate, roomTypeId) VALUES (?,?,?,?,?)", ["厨房", 0, "0", 0, 1, 1]);
         this.query("INSERT INTO roomStructures (sNode, parentId, parentPath,depth, isTemplate, roomTypeId) VALUES (?,?,?,?,?)", ["卫生间", 0, "0", 0, 1, 1]);
+
+        this.query("INSERT INTO roomStructures (sNode, parentId, parentPath,depth, isTemplate) VALUES (?,?,?,?,?)", ["书房", 0, "0", 0, 1]);
+        this.query("INSERT INTO roomStructures (sNode, parentId, parentPath,depth, isTemplate) VALUES (?,?,?,?,?)", ["餐厅", 0, "0", 0, 1]);
+        this.query("INSERT INTO roomStructures (sNode, parentId, parentPath,depth, isTemplate, roomTypeId) VALUES (?,?,?,?,?)", ["阳台", 0, "0", 0, 1, 1]);
+
+        this.query("INSERT INTO roomStructures (sNode, parentId, parentPath,depth, isTemplate, roomTypeId) VALUES (?,?,?,?,?)", ["茶几", 1, "0,1", 1, 1, 1]);
+        this.query("INSERT INTO roomStructures (sNode, parentId, parentPath,depth, isTemplate, roomTypeId) VALUES (?,?,?,?,?)", ["大厨", 2, "0,2", 1, 1, 1]);
+        this.query("INSERT INTO roomStructures (sNode, parentId, parentPath,depth, isTemplate, roomTypeId) VALUES (?,?,?,?,?)", ["床头柜", 2, "0,2", 1, 1, 1]);
+        this.query("INSERT INTO roomStructures (sNode, parentId, parentPath,depth, isTemplate, roomTypeId) VALUES (?,?,?,?,?)", ["壁橱", 3, "0,3", 1, 1, 1]);
+        this.query("INSERT INTO roomStructures (sNode, parentId, parentPath,depth, isTemplate, roomTypeId) VALUES (?,?,?,?,?)", ["架子", 4, "0,4", 1, 1, 1]);
+        this.query("INSERT INTO roomStructures (sNode, parentId, parentPath,depth, isTemplate) VALUES (?,?,?,?,?)", ["书橱", 5, "0,5", 1, 1]);
+        this.query("INSERT INTO roomStructures (sNode, parentId, parentPath,depth, isTemplate) VALUES (?,?,?,?,?)", ["长壁橱", 6, "0,6", 1, 1]);
+        this.query("INSERT INTO roomStructures (sNode, parentId, parentPath,depth, isTemplate, roomTypeId) VALUES (?,?,?,?,?)", ["吊橱", 7, "0,7", 1, 1, 1]);
+        this.query("INSERT INTO roomStructures (sNode, parentId, parentPath,depth, isTemplate, roomTypeId) VALUES (?,?,?,?,?)", ["床底", 2, "0,2", 1, 1, 1]);
+
+        this.query("INSERT INTO roomStructures (sNode, parentId, parentPath,depth, isTemplate, roomTypeId) VALUES (?,?,?,?,?)", ["右上格", 9, "0,2,9", 2, 1, 1]);
+        this.query("INSERT INTO roomStructures (sNode, parentId, parentPath,depth, isTemplate, roomTypeId) VALUES (?,?,?,?,?)", ["左手抽屉", 9, "0,2,9", 2, 1, 1]);
 
         this.query("INSERT INTO roomStructures (sNode, parentId, parentPath,depth, isTemplate, roomTypeId) VALUES (?,?,?,?,?)", ["客厅", 0, "0", 0, 1, 2]);
         this.query("INSERT INTO roomStructures (sNode, parentId, parentPath,depth, isTemplate, roomTypeId) VALUES (?,?,?,?,?)", ["卧室", 0, "0", 0, 1, 2]);
         this.query("INSERT INTO roomStructures (sNode, parentId, parentPath,depth, isTemplate, roomTypeId) VALUES (?,?,?,?,?)", ["厨房", 0, "0", 0, 1, 2]);
         this.query("INSERT INTO roomStructures (sNode, parentId, parentPath,depth, isTemplate, roomTypeId) VALUES (?,?,?,?,?)", ["卫生间", 0, "0", 0, 1, 2]);
+        this.query("INSERT INTO roomStructures (sNode, parentId, parentPath,depth, isTemplate, roomTypeId) VALUES (?,?,?,?,?)", ["阳台", 0, "0", 0, 1, 2]);
 
-        this.query("INSERT INTO roomStructures (sNode, parentId, parentPath,depth, isTemplate, roomTypeId) VALUES (?,?,?,?,?)", ["书房", 0, "0", 0, 1, 2]);
-        this.query("INSERT INTO roomStructures (sNode, parentId, parentPath,depth, isTemplate) VALUES (?,?,?,?,?)", ["餐厅", 0, "0", 0, 1]);
-        this.query("INSERT INTO roomStructures (sNode, parentId, parentPath,depth, isTemplate, roomTypeId) VALUES (?,?,?,?,?)", ["阳台", 0, "0", 0, 1, 1]);
+        this.query("INSERT INTO roomStructures (sNode, parentId, parentPath,depth, isTemplate, roomTypeId) VALUES (?,?,?,?,?)", ["茶几", 1, "0,1", 1, 1, 2]);
+        this.query("INSERT INTO roomStructures (sNode, parentId, parentPath,depth, isTemplate, roomTypeId) VALUES (?,?,?,?,?)", ["大厨", 2, "0,2", 1, 1, 2]);
+        this.query("INSERT INTO roomStructures (sNode, parentId, parentPath,depth, isTemplate, roomTypeId) VALUES (?,?,?,?,?)", ["床头柜", 2, "0,2", 1, 1, 2]);
+        this.query("INSERT INTO roomStructures (sNode, parentId, parentPath,depth, isTemplate, roomTypeId) VALUES (?,?,?,?,?)", ["壁橱", 3, "0,3", 1, 1, 2]);
+        this.query("INSERT INTO roomStructures (sNode, parentId, parentPath,depth, isTemplate, roomTypeId) VALUES (?,?,?,?,?)", ["架子", 4, "0,4", 1, 1, 2]);
+        this.query("INSERT INTO roomStructures (sNode, parentId, parentPath,depth, isTemplate, roomTypeId) VALUES (?,?,?,?,?)", ["吊橱", 7, "0,7", 1, 1, 2]);
+        this.query("INSERT INTO roomStructures (sNode, parentId, parentPath,depth, isTemplate, roomTypeId) VALUES (?,?,?,?,?)", ["床底", 2, "0,2", 1, 1, 2]);
 
-        this.query("INSERT INTO roomStructures (sNode, parentId, parentPath,depth, isTemplate) VALUES (?,?,?,?,?)", ["茶几", 1, "0,1", 1, 1]);
-        this.query("INSERT INTO roomStructures (sNode, parentId, parentPath,depth, isTemplate) VALUES (?,?,?,?,?)", ["大厨", 2, "0,2", 1, 1]);
-        this.query("INSERT INTO roomStructures (sNode, parentId, parentPath,depth, isTemplate) VALUES (?,?,?,?,?)", ["床头柜", 2, "0,2", 1, 1]);
-        this.query("INSERT INTO roomStructures (sNode, parentId, parentPath,depth, isTemplate) VALUES (?,?,?,?,?)", ["壁橱", 3, "0,3", 1, 1]);
-        this.query("INSERT INTO roomStructures (sNode, parentId, parentPath,depth, isTemplate) VALUES (?,?,?,?,?)", ["架子", 4, "0,4", 1, 1]);
-        this.query("INSERT INTO roomStructures (sNode, parentId, parentPath,depth, isTemplate) VALUES (?,?,?,?,?)", ["书橱", 5, "0,5", 1, 1]);
-        this.query("INSERT INTO roomStructures (sNode, parentId, parentPath,depth, isTemplate) VALUES (?,?,?,?,?)", ["长壁橱", 6, "0,6", 1, 1]);
-        this.query("INSERT INTO roomStructures (sNode, parentId, parentPath,depth, isTemplate) VALUES (?,?,?,?,?)", ["吊橱", 7, "0,7", 1, 1]);
-        this.query("INSERT INTO roomStructures (sNode, parentId, parentPath,depth, isTemplate) VALUES (?,?,?,?,?)", ["床底", 2, "0,2", 1, 1]);
-
-        this.query("INSERT INTO roomStructures (sNode, parentId, parentPath,depth, isTemplate) VALUES (?,?,?,?,?)", ["右上格", 9, "0,2,9", 2, 1]);
-        this.query("INSERT INTO roomStructures (sNode, parentId, parentPath,depth, isTemplate) VALUES (?,?,?,?,?)", ["左手抽屉", 9, "0,2,9", 2, 1]);
-
+        this.query("INSERT INTO roomStructures (sNode, parentId, parentPath,depth, isTemplate, roomTypeId) VALUES (?,?,?,?,?)", ["右上格", 9, "0,2,9", 2, 1, 2]);
+        this.query("INSERT INTO roomStructures (sNode, parentId, parentPath,depth, isTemplate, roomTypeId) VALUES (?,?,?,?,?)", ["左手抽屉", 9, "0,2,9", 2, 1, 2]);
 
         /* members table*/
         this.query("DROP TABLE IF EXISTS members");
@@ -197,5 +248,6 @@ angular.module('myBox.services.db', ['ngCordova.plugins.sqlite'])
         this.query("DROP TABLE IF EXISTS goodsPhotos");
         this.query("CREATE TABLE IF NOT EXISTS goodsPhotos (photoId integer primary key, filePath text, goodsId integer, isMain integer, isUploaded integer)");
       }
-    }
+    };
+    return dbFn;
   }]);

@@ -1,0 +1,29 @@
+<ion-view view-title="{{myRoom.roomName}}">
+  <ion-content class="padding new">
+    <div class="list">
+      <label class="item item-input">
+        <input type="text" placeholder="good name">
+      </label>
+      <div class="photo item">
+        <div class="list">
+          <div class="item" ng-repeat="img in imagesList">
+            <img src="{{img}}">
+          </div>
+        </div>
+        <i class="icon ion-ios-camera add-pic" ng-click="addPhoto()"></i>
+      </div>
+      <label class="item">
+        <input type="number" placeholder="1" min="0" step="1">
+      </label>
+      <label class="item item-input" ng-click="selectLocation(goodForm.localId, myRoom.roomType)">
+        <i class="ion-ios-location-outline"></i> {{goodForm.localName}}
+      </label>
+      <label class="item item-input" ng-click="selectType()">
+        <i class="ion-ios-pricetag-outline"></i> {{goodForm.goodType}}
+      </label>
+      <label class="item item-input">
+        <textarea placeholder="Comments"></textarea>
+      </label>
+    </div>
+  </ion-content>
+</ion-view>

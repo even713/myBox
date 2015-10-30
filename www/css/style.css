@@ -1,7 +1,7 @@
 /* Empty. Add your own CSS if you like */
 
 /* page layout */
-.my-boxes-app .item {
+.my-boxes-app ion-side-menu .item {
   padding-top: 8px;
   padding-bottom: 7px;
   border: none;
@@ -30,4 +30,47 @@
 .my-boxes .room-types .room-item{
   border-bottom: 1px solid #000;
   margin-top: 2px;
+}
+
+/* My Items page */
+.my-items .add-item{
+  color: #13C513;
+  font-size: 4em;
+  position: absolute;
+  bottom: 0.4em;
+  right: 0.4em;
+}
+
+.my-items .new .ion-ios-camera{
+  font-size: 5em;
+  color: #6D6D6D;
+  margin-left: 0.2em;
+}
+
+.my-items .new .ion-ios-camera:before{
+  line-height: 0.2em;
+}
+
+.my-items .photo.item .item{
+  float: left;
+  padding: 0.2em;
+}
+
+.my-items .photo.item img{
+  width: 4em;
+}
+
+.my-items .room-structure .col{
+  padding: 0;
+}
+.my-items .room-structure .item>div{
+  float: left;
+  height: 100%;
+  width: 85%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.my-items .room-structure .item>i{
+  float: right;
 }

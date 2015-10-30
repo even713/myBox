@@ -5,12 +5,13 @@
 // the 2nd parameter is an array of 'requires'
 // 'starter.services' is found in services.js
 // 'starter.controllers' is found in controllers.js
-angular.module('myBox', ['ionic', 'myBox.controllers', 'myBox.services'])
+angular.module('myBox', ['ionic', 'ngCordova', 'myBox.controllers', 'myBox.services'])
 
-.run(function($ionicPlatform) {
+.run(function($ionicPlatform, clog, myBoxDB) {
   $ionicPlatform.ready(function() {
     // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
     // for form inputs)
+    clog.log("$ionicPlatform ready");
     if (window.cordova && window.cordova.plugins && window.cordova.plugins.Keyboard) {
       cordova.plugins.Keyboard.hideKeyboardAccessoryBar(true);
       cordova.plugins.Keyboard.disableScroll(true);
@@ -20,10 +21,15 @@ angular.module('myBox', ['ionic', 'myBox.controllers', 'myBox.services'])
       // org.apache.cordova.statusbar required
       StatusBar.styleLightContent();
     }
+    myBoxDB.open();
   });
 })
 
-.config(function($stateProvider, $urlRouterProvider) {
+.config(function($stateProvider, $urlRouterProvider, $ionicConfigProvider) {
+  // By default, views are cached to improve performance.
+  // Disable cache globally
+  // http://ionicframework.com/docs/api/directive/ionNavView/
+  $ionicConfigProvider.views.maxCache(0);
 
   // Ionic uses AngularUI Router which uses the concept of states
   // Learn more here: https://github.com/angular-ui/ui-router
@@ -34,6 +40,7 @@ angular.module('myBox', ['ionic', 'myBox.controllers', 'myBox.services'])
    /* myBoxes */
   .state('myBoxes', {
     abstract: true,
+    //cache: false,
     url: '/myBoxes',
     views: {
       'appContent' :{
@@ -43,7 +50,7 @@ angular.module('myBox', ['ionic', 'myBox.controllers', 'myBox.services'])
     }
   })
     .state('myBoxes.list', {
-      url: '/list',
+      url: '',
       views: {
         'myBoxes' :{
           templateUrl: "views/myBoxes/myBoxes.list.html"
@@ -71,6 +78,7 @@ angular.module('myBox', ['ionic', 'myBox.controllers', 'myBox.services'])
 
   /* My Items */
   .state('myItems', {
+    abstract: true,
     url: '/myItems',
     views: {
       'appContent' :{
@@ -79,6 +87,41 @@ angular.module('myBox', ['ionic', 'myBox.controllers', 'myBox.services'])
       }
     }
   })
+    .state('myItems.list', {
+      url: '',
+      views: {
+        'myItems' :{
+          templateUrl: "views/myItems/myItems.list.html"
+        }
+      }
+    })
+    .state('myItems.newItem', {
+      url: '/newItem',
+      views: {
+        'myItems' :{
+          templateUrl: "views/myItems/myItems.new.html",
+          controller : "newItemsCtrl"
+        }
+      }
+    })
+    .state('myItems.selectLocation', {
+      url: '/selectLocation',
+      views: {
+        'myItems' :{
+          templateUrl: "views/myItems/myItems.selLocal.html",
+          controller : "selectLocalCtrl"
+        }
+      }
+    })
+    .state('myItems.selectType', {
+      url: '/selectType',
+      views: {
+        'myItems' :{
+          templateUrl: "views/myItems/myItems.selType.html",
+          controller : "selectTypeCtrl"
+        }
+      }
+    })
 
   /* My Houses*/
   .state('myHouse', {
@@ -135,6 +178,6 @@ angular.module('myBox', ['ionic', 'myBox.controllers', 'myBox.services'])
   //});
 
   // if none of the above states are matched, use this as the fallback
-  $urlRouterProvider.otherwise('/myBoxes/list');
+  $urlRouterProvider.otherwise('/myBoxes');
 
 });

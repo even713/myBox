@@ -2,18 +2,22 @@
  * Created by Cara on 2015/10/5.
  */
 angular.module('myBox.controllers')
-.controller('myBoxCtrl', function($scope, myBoxDB){
-    myBoxDB.queryRooms(function(rooms) {
-      if(rooms.rows.length == 0) {
-        console.log("no room yet");
-      } else {
-        console.log(["rooms records:", rooms.rows.length, rooms.rows]);
-      }
-      $scope.rooms = [];
-      for(var i = 0; i < rooms.rows.length; i++) {
-        $scope.rooms.push({roomId: rooms.rows[i].roomId, roomName: rooms.rows[i].roomName, isDefault: rooms.rows[i].isDefault});
-      }
-    });
+.controller('myBoxCtrl', function($scope, myBoxDB, clog){
+
+    //$scope.myinit = function () {
+      clog.log("myBoxctrl");
+      myBoxDB.queryRooms(function(rooms) {
+        if(rooms.rows.length == 0) {
+          console.log("no room yet");
+        } else {
+          console.log(["rooms records:", rooms.rows.length, rooms.rows]);
+        }
+        $scope.rooms = [];
+        for(var i = 0; i < rooms.rows.length; i++) {
+          $scope.rooms.push({roomId: rooms.rows.item(i).roomId, roomName: rooms.rows.item(i).roomName, isDefault: rooms.rows.item(i).isDefault});
+        }
+      });
+    //};
 
     // default form value for setup new house
     $scope.new = {
@@ -37,8 +41,18 @@ angular.module('myBox.controllers')
         console.log(["rooms records:", roomsTypes.rows.length, roomsTypes.rows]);
       }
       $scope.roomsTypes = [];
+      /*for(var tt in roomsTypes.rows) {
+        console.log([tt, roomsTypes.rows[tt]]);
+        for(var c in roomsTypes.rows[tt]) {
+          console.log([c, roomsTypes.rows[tt][c]]);
+        }
+      }*/
       for(var i = 0; i < roomsTypes.rows.length; i++) {
-        $scope.roomsTypes.push({typeId: roomsTypes.rows[i].typeId, typesName: roomsTypes.rows[i].typesName});
+        /*console.log([i, roomsTypes.rows[i]]);
+        for(var t in roomsTypes.rows[i]){
+          console.log([t, roomsTypes.rows[i][t]]);
+        }*/
+        $scope.roomsTypes.push({typeId: roomsTypes.rows.item(i).typeId, typesName: roomsTypes.rows.item(i).typesName});
       }
       console.log($scope.roomsTypes);
     });

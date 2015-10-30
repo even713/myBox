@@ -2,11 +2,11 @@
   <ion-content class="padding">
     <div class="boxes-container">
       <div ng-repeat="room in rooms" id="room_{{room.roomId}}">
-        <img ng-if="room.isDefault != 1" src="../../img/boxes/House_Normal.png"/>
-        <img ng-if="room.isDefault == 1" src="../../img/boxes/House_Default.png"/>
+        <img ng-if="room.isDefault != 1" src="img/boxes/House_Normal.png"/>
+        <img ng-if="room.isDefault == 1" src="img/boxes/House_Default.png"/>
         <div class="house-text">{{room.roomName}}</div>
       </div>
-      <img src="../img/boxes/House_New.png" ng-click="newBox()"/>
+      <img src="img/boxes/House_New.png" ng-click="newBox()"/>
     </div>
   </ion-content>
 </ion-view>

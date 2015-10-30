@@ -1,0 +1,23 @@
+<ion-view view-title="请选择房间位置">
+  <ion-content class="padding new">
+    <div class="room-structure row">
+      <div class="list col">
+        <div class="item" ng-repeat="structs in roomStructure[selectedId[0]]">
+          <div ng-click="changeList(0, structs.sId)">{{structs.sNode}}</div>
+        </div>
+      </div>
+      <div class="list col">
+        <div class="item" ng-repeat="structs in roomStructure[selectedId[1]]">
+          <div ng-click="changeList(1, structs.sId)">{{structs.sNode}}</div>
+          <i class="ion-ios-box-outline" ng-click="selectLoc(structs.sId,structs.sNode)"></i>
+        </div>
+      </div>
+      <div class="list col">
+        <div class="item" ng-repeat="structs in roomStructure[selectedId[2]]">
+          <div ng-click="changeList(2, structs.sId)">{{structs.sNode}}</div>
+          <i class="ion-ios-box-outline" ng-click="selectLoc(structs.sId,structs.sNode)"></i>
+        </div>
+      </div>
+    </div>
+  </ion-content>
+</ion-view>
