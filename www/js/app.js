@@ -122,6 +122,15 @@ angular.module('myBox', ['ionic', 'ngCordova', 'myBox.controllers', 'myBox.servi
         }
       }
     })
+    .state('myItems.selectOwner', {
+      url: '/selectOwner',
+      views: {
+        'myItems' :{
+          templateUrl: "views/myItems/myItems.selOwner.html",
+          controller : "selectOwnerCtrl"
+        }
+      }
+    })
 
   /* My Houses*/
   .state('myHouse', {

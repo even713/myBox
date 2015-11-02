@@ -130,8 +130,11 @@ angular.module('myBox.services.db', ['ngCordova.plugins.sqlite', 'myBox.services
       },
 
       queryDefaultRoom: function(callback){
-        this.query("SELECT a.roomId, a.roomName, c.sId, c.[sNode], c.roomTypeId, d.gTypeId, d.gTypeName from rooms a join roomTypes b on b.[roomId] = a.[roomId] " +
-          "join roomStructures c on c.[roomTypeId]=b.[typeId] join goodsTypes d where a.isDefault = 1 and c.[isDefault]=1 and d.[isDefault] = 1")
+        this.query("SELECT a.roomId, a.roomName, c.sId, c.[sNode], c.roomTypeId, d.gTypeId, d.gTypeName, e.[memberId], e.[memberName] " +
+          "from rooms a join roomTypes b on b.[roomId] = a.[roomId] " +
+          "join roomStructures c on c.[roomTypeId]=b.[typeId] " +
+          "join goodsTypes d join members e " +
+          "where a.isDefault = 1 and c.[isDefault]=1 and d.[isDefault] = 1 and e.[isDefault]=1")
           .then(callback, function(){
             console.log("error when query data from my rooms");
         });
@@ -153,6 +156,17 @@ angular.module('myBox.services.db', ['ngCordova.plugins.sqlite', 'myBox.services
           .then(callback, function(){
             console.log("error when query data from goodstype");
           });
+      },
+
+      updateDefaultGoodType: function(oldId, newId, callback){
+        var sqls = [];
+        sqls.push("update goodsTypes set isDefault = 0 where gTypeId="+ oldId +";");
+        sqls.push("update goodsTypes set isDefault = 1 where gTypeId="+ newId +";");
+        this.transaction(sqls).then(function(){
+          callback && callback();
+        }, function(){
+          console.log("error when update default in goodsTypes");
+        });
       },
 
       initData: function () {

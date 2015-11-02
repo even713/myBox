@@ -11,6 +11,8 @@ angular.module('myBox.controllers')
         $scope.goodForm.localName = $scope.myRoom.sNode;
         $scope.goodForm.goodType = rooms.rows.item(0).gTypeName;
         $scope.goodForm.goodTypeId = rooms.rows.item(0).gTypeId;
+        $scope.goodForm.ownerId = rooms.rows.item(0).memberId;
+        $scope.goodForm.owner = rooms.rows.item(0).memberName;
       } else {
         window.location.hash = "#/myBoxes"; // If there's no room yet, redirect user.
       }
@@ -31,11 +33,17 @@ angular.module('myBox.controllers')
       window.location.hash = "#/myItems/selectType";
     };
 
+    $scope.selectOwner = function(){
+      window.location.hash = "#/myItems/selectOwner";
+    };
+
     $scope.goodForm = {
       localId: -1,
       localName: null,
       goodTypeId: -1,
-      goodType: null
+      goodType: null,
+      ownerId: -1,
+      owner: null
     };
 })
   .controller('newItemsCtrl', function($scope, $cordovaImagePicker, $ionicActionSheet, $cordovaCamera){
@@ -162,7 +170,33 @@ console.log($cordovaCamera.getPicture);
   })
   .controller('selectTypeCtrl', function($scope, myBoxDB){
     $scope.goodsTypes = [];
+
+    $scope.changeType = function(typeId, typeName){
+      myBoxDB.updateDefaultGoodType($scope.goodForm.goodTypeId, typeId, function(){
+        $scope.goodForm.goodTypeId = typeId;
+        $scope.goodForm.goodType = typeName;
+        window.history.back();
+      });
+    };
+
     myBoxDB.queryGoodsType(function (res) {
+      for(var i = 0; i < res.rows.length; i++) {
+        $scope.goodsTypes.push({gTypeId:res.rows.item(i).gTypeId, gTypeName: res.rows.item(i).gTypeName});
+      }
+    });
+  })
+  .controller('selectOwnerCtrl', function($scope, myBoxDB){
+    $scope.members = {ids:[], names:[]};
+
+    $scope.addMember = function(ownerId, typeName){
+      myBoxDB.updateDefaultOwner($scope.goodForm.ownerId, $scope.members.ids, function(){
+        $scope.goodForm.ownerId = $scope.members.ids;
+        $scope.goodForm.owner = $scope.members.names;
+        window.history.back();
+      });
+    };
+//TODO:
+    myBoxDB.queryOwner(function (res) {
       for(var i = 0; i < res.rows.length; i++) {
         $scope.goodsTypes.push({gTypeId:res.rows.item(i).gTypeId, gTypeName: res.rows.item(i).gTypeName});
       }

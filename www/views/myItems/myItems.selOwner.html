@@ -1,0 +1,14 @@
+<ion-view view-title="请选择成员">
+  <ion-content class="padding new">
+    <div class="good-type row">
+      <ul class="list col">
+        <li class="item item-checkbox" ng-repeat="m in members">
+          <label class="checkbox" ng-click="addMember(m.ownerId, m.owner)">
+            <input type="checkbox">
+          </label>
+          {{m.owner}}
+        </li>
+      </ul>
+    </div>
+  </ion-content>
+</ion-view>
