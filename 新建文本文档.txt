@@ -1,0 +1,8 @@
+0. prepare nodejs env
+1. npm install -g cordova ionic
+2. ionic serve
+
+prepare db:
+1. install sqllite
+2. in sqllite: File->open db, select C:\Users\Administrator\AppData\Local\Google\Chrome\User Data\Default\databases\http_192.168.0.108_8100, select All files, then select 6(is your db)
+Import data-> sql script->select a script from repository. then you will have whole database.
