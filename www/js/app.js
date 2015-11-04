@@ -5,7 +5,7 @@
 // the 2nd parameter is an array of 'requires'
 // 'starter.services' is found in services.js
 // 'starter.controllers' is found in controllers.js
-angular.module('myBox', ['ionic', 'ngCordova', 'myBox.controllers', 'myBox.services'])
+angular.module('myBox', ['ionic', 'ngCordova', 'myBox.controllers', 'myBox.services', 'angularTreeview'])
 
 .run(function($ionicPlatform, clog, myBoxDB) {
   $ionicPlatform.ready(function() {

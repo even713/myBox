@@ -1,6 +1,23 @@
 <ion-view view-title="我的物品">
   <ion-content class="padding">
-    {{testData}}
+    <div class="list my-items">
+      <a class="item item-thumbnail-left" href="#" ng-repeat="item in myItems">
+        <img ng-src="{{item.photo}}">
+        <h2>{{item.goodsName}}</h2>
+        <p>{{item.location}}</p>
+        <p>{{item.note}}</p>
+      </a>
+    </div>
+
+    <div class="my-structures"
+         data-angular-treeview="true"
+         data-tree-id="myStructure"
+         data-tree-model="structureData"
+         data-node-id="sId"
+         data-node-label="sNode"
+         data-node-children="children" >
+
+    </div>
 
   </ion-content>
   <i class="add-item icon ion-plus-circled" ng-click="addItem()"></i>

@@ -206,6 +206,25 @@ angular.module('myBox.services.db', ['ngCordova.plugins.sqlite', 'myBox.services
         });
       },
 
+      queryMyItems: function(roomId, callback){
+        this.query("select a.goodsId, a.goodsName, a.location, b.[sNode], c.[filePath], a.note from goods a " +
+          "inner join roomstructures b on b.[sId] = a.location " +
+          "left join goodsphotos c on c.[goodsId] = a.goodsId " +
+          "where a.roomId="+ roomId +" and c.[isMain]=1 order by a.[modifydate] desc")
+          .then(callback, function(){
+            console.log("error when query myitems");
+          });
+      },
+
+      queryMyStructure: function (callback) {
+        this.query("select a.sId, a.sNode, a.parentId from roomStructures a " +
+          "where a.roomTypeId in (select roomType from rooms where isdefault=1) " +
+          "order by a.depth desc")
+          .then(callback, function(){
+            console.log("error when query myitems");
+          });
+      },
+
       initData: function () {
 
         /* roomTypes table (column roomStructure is deprated)*/

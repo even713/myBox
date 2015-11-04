@@ -3,6 +3,23 @@
  */
 angular.module('myBox.controllers')
 .controller('myItemsCtrl', function($scope, myBoxDB){
+    $scope.structureData = [];
+    var structData = {};
+    myBoxDB.queryMyStructure(function(res){
+      for(var i = 0; i < res.rows.length; i++) {
+        var parentId = res.rows.item(i).parentId;
+        if(parentId == 0) {
+          $scope.structureData.push({sNode: res.rows.item(i).sNode, sId: res.rows.item(i).sId, children: structData[res.rows.item(i).sId]});
+        } else {
+          if(structData[parentId]) {
+            structData[parentId].push({sNode: res.rows.item(i).sNode, sId: res.rows.item(i).sId, children: structData[res.rows.item(i).sId]});
+          } else {
+            structData[parentId] = [{sNode: res.rows.item(i).sNode, sId: res.rows.item(i).sId, children: structData[res.rows.item(i).sId]}];
+          }
+        }
+      }
+    });
+
     myBoxDB.queryDefaultRoom(function(rooms){
       if(rooms.rows.length > 0){
         $scope.myRoom = {roomId: rooms.rows.item(0).roomId, roomName: rooms.rows.item(0).roomName, sId: rooms.rows.item(0).sId,
@@ -18,11 +35,21 @@ angular.module('myBox.controllers')
           $scope.goodForm.ownerId += "," + rooms.rows.item(i).memberId;
           $scope.goodForm.owner += "," + rooms.rows.item(i).memberName;
         }
+        queryMyItems($scope.goodForm.roomId);
       } else {
         window.location.hash = "#/myBoxes"; // If there's no room yet, redirect user.
       }
       console.log($scope.myRoom);
     });
+
+    function queryMyItems(roomId){
+      myBoxDB.queryMyItems(roomId, function(res){
+        for(var i = 0; i < res.rows.length; i++) {
+          $scope.myItems.push({goodsId:res.rows.item(i).goodsId, goodsName: res.rows.item(i).goodsName,
+            location: res.rows.item(i).sNode, photo: res.rows.item(i).filePath, note: res.rows.item(i).note});
+        }
+      });
+    }
 
     $scope.addItem = function(){
       window.location.hash = "#/myItems/newItem";
@@ -41,6 +68,8 @@ angular.module('myBox.controllers')
     $scope.selectOwner = function(){
       window.location.hash = "#/myItems/selectOwner";
     };
+
+    $scope.myItems = [];
 
     $scope.goodForm = {
       roomId: -1,
