@@ -7,12 +7,17 @@ angular.module('myBox.controllers')
       if(rooms.rows.length > 0){
         $scope.myRoom = {roomId: rooms.rows.item(0).roomId, roomName: rooms.rows.item(0).roomName, sId: rooms.rows.item(0).sId,
           sNode:rooms.rows.item(0).sNode, roomType: rooms.rows.item(0).roomTypeId};
+        $scope.goodForm.roomId = $scope.myRoom.roomId;
         $scope.goodForm.localId = $scope.myRoom.sId;
         $scope.goodForm.localName = $scope.myRoom.sNode;
         $scope.goodForm.goodType = rooms.rows.item(0).gTypeName;
         $scope.goodForm.goodTypeId = rooms.rows.item(0).gTypeId;
-        $scope.goodForm.ownerId = rooms.rows.item(0).memberId;
-        $scope.goodForm.owner = rooms.rows.item(0).memberName;
+        $scope.goodForm.ownerId = "";
+        $scope.goodForm.owner = "";
+        for(var i = 0; i < rooms.rows.length; i++) {
+          $scope.goodForm.ownerId += "," + rooms.rows.item(i).memberId;
+          $scope.goodForm.owner += "," + rooms.rows.item(i).memberName;
+        }
       } else {
         window.location.hash = "#/myBoxes"; // If there's no room yet, redirect user.
       }
@@ -38,23 +43,36 @@ angular.module('myBox.controllers')
     };
 
     $scope.goodForm = {
+      roomId: -1,
+      goodName: null,
+      goodNum: 1,
       localId: -1,
       localName: null,
       goodTypeId: -1,
       goodType: null,
       ownerId: -1,
-      owner: null
+      owner: null,
+      note: null,
+      photos: []
+    };
+
+    $scope.saveItem = function(){
+      //TODO: validation
+      myBoxDB.saveItem($scope.goodForm, function(){
+        console.log("success");
+      });
     };
 })
   .controller('newItemsCtrl', function($scope, $cordovaImagePicker, $ionicActionSheet, $cordovaCamera){
-    $scope.imagesList = [];
+    //$scope.imagesList = [];
+    $scope.goodForm.photos = [];
 
     /* for test purpose TODO:*/
-    //var testImage = [];
-    //testImage.push("img/testPhotos/IMG_20151017_102154.jpg");
-    //testImage.push("img/testPhotos/IMG_20151017_102158.jpg");
-    //testImage.push("img/testPhotos/IMG_20151017_102203.jpg");
-    //$scope.imagesList = $scope.imagesList.concat(testImage);
+    var testImage = [];
+    testImage.push("img/testPhotos/IMG_20151017_102154.jpg");
+    testImage.push("img/testPhotos/IMG_20151017_102158.jpg");
+    testImage.push("img/testPhotos/IMG_20151017_102203.jpg");
+    $scope.goodForm.photos = $scope.goodForm.photos.concat(testImage);
 
     $scope.addPhoto = function(){
       $ionicActionSheet.show({
@@ -93,7 +111,7 @@ angular.module('myBox.controllers')
       $cordovaImagePicker.getPictures(options)
         .then(function (results) {
 
-          $scope.imagesList = $scope.imagesList.concat(results);
+          $scope.goodForm.photos = $scope.goodForm.photos.concat(results);
 
         }, function (error) {
           // error getting photos
@@ -118,7 +136,7 @@ angular.module('myBox.controllers')
 console.log($cordovaCamera.getPicture);
       $cordovaCamera.getPicture(options).then(function(imageData) {
         var src = "data:image/jpeg;base64," + imageData;
-        $scope.imagesList.push(src);
+        $scope.goodForm.photos.push(src);
       }, function(err) {
         // error
       });
@@ -186,20 +204,37 @@ console.log($cordovaCamera.getPicture);
     });
   })
   .controller('selectOwnerCtrl', function($scope, myBoxDB){
-    $scope.members = {ids:[], names:[]};
+    $scope.members = [];
 
-    $scope.addMember = function(ownerId, typeName){
-      myBoxDB.updateDefaultOwner($scope.goodForm.ownerId, $scope.members.ids, function(){
-        $scope.goodForm.ownerId = $scope.members.ids;
-        $scope.goodForm.owner = $scope.members.names;
+    $scope.selectMember = function (m,elem) {
+      console.log([m, elem]);
+    };
+
+    $scope.updateOwners = function(ownerId, typeName){
+      var ids = [], names = [];
+      for(var i = 0; i < $scope.members.length; i++){
+        if($scope.members[i].isDefault) {
+          ids.push($scope.members[i].memberId);
+          names.push($scope.members[i].memberName);
+        }
+      }
+      if(ids.length == 0) {
+        alert("请选择成员！");
+        return;
+      }
+
+      myBoxDB.updateDefaultOwner(ids, function(){
+        $scope.goodForm.ownerId = ids.join(",");
+        $scope.goodForm.owner = names.join(",");
         window.history.back();
       });
     };
-//TODO:
-    myBoxDB.queryOwner(function (res) {
+
+    myBoxDB.queryMembers(function (res) {
       for(var i = 0; i < res.rows.length; i++) {
-        $scope.goodsTypes.push({gTypeId:res.rows.item(i).gTypeId, gTypeName: res.rows.item(i).gTypeName});
+        $scope.members.push({memberId: res.rows.item(i).memberId, memberName: res.rows.item(i).memberName, isDefault: res.rows.item(i).isDefault == null ? 0 : res.rows.item(i).isDefault});
       }
+      console.log($scope.members);
     });
   })
 ;

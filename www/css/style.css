@@ -74,3 +74,11 @@
 .my-items .room-structure .item>i{
   float: right;
 }
+
+.my-items .new .item.selection>div{
+  float: left;
+  margin-right: 1em;
+}
+.my-items .new .item.selection>div i{
+  padding-left: 0.5em;
+}

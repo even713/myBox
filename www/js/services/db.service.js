@@ -169,6 +169,43 @@ angular.module('myBox.services.db', ['ngCordova.plugins.sqlite', 'myBox.services
         });
       },
 
+      queryMembers: function(callback){
+        this.query("select memberid, membername, isdefault from members")
+          .then(callback, function(){
+            console.log("error when query members");
+          });
+      },
+
+      updateDefaultOwner: function(ids, callback){
+        var sqls = [];
+        sqls.push("update members set isDefault = 0");
+        sqls.push("update members set isDefault = 1 where memberId in ("+ ids.join(",") +");");
+        this.transaction(sqls).then(function(){
+          callback && callback();
+        }, function(){
+          console.log("error when update default in members");
+        });
+      },
+
+      saveItem: function(goodsForm, callback){
+        var sqls = [];
+        sqls.push("insert into goods (goodsName, number, createdate, modifydate, members, goodstype, location, roomId, note) values " +
+          "('"+ goodsForm.goodName +"', "+ goodsForm.goodNum +", "+ new Date().getTime() +", "+ new Date().getTime() +", '"+ goodsForm.ownerId +"', " +
+          ""+ goodsForm.goodTypeId +", "+ goodsForm.localId +", "+ goodsForm.roomId +", '"+ goodsForm.note +"')");
+        for(var i = 0; i < goodsForm.photos.length; i++) {
+          if(i == 0)
+            sqls.push("insert into goodsphotos (filePath, goodsId, isMain) select '"+ goodsForm.photos[i] +"', goodsId, 1 from goods order by goodsId desc limit 1");
+          else
+            sqls.push("insert into goodsphotos (filePath, goodsId, isMain) select '"+ goodsForm.photos[i] +"', goodsId, 0 from goods order by goodsId desc limit 1");
+        }
+        console.log(sqls);
+        this.transaction(sqls).then(function(){
+          callback && callback();
+        }, function(){
+          console.log("error when save item");
+        });
+      },
+
       initData: function () {
 
         /* roomTypes table (column roomStructure is deprated)*/
