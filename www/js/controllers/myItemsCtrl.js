@@ -2,7 +2,7 @@
  * Created by Cara on 2015/10/5.
  */
 angular.module('myBox.controllers')
-.controller('myItemsCtrl', function($scope, myBoxDB){
+.controller('myItemsCtrl', function($scope, myBoxDB, $ionicPopover){
     $scope.structureData = [];
     var structData = {};
     myBoxDB.queryMyStructure(function(res){
@@ -40,6 +40,21 @@ angular.module('myBox.controllers')
         window.location.hash = "#/myBoxes"; // If there's no room yet, redirect user.
       }
       console.log($scope.myRoom);
+    });
+
+    $ionicPopover.fromTemplateUrl('room-structure.html', {
+      scope: $scope
+    }).then(function(popover) {
+      $scope.popover = popover;
+    });
+
+    $("ion-header-bar>div.title").off("click").on("click", function(event){
+      $scope.popover.show($(this));
+    });
+
+    //Cleanup the popover when we're done with it!
+    $scope.$on('$destroy', function() {
+      $scope.popover.remove();
     });
 
     function queryMyItems(roomId){

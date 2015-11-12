@@ -9,15 +9,21 @@
       </a>
     </div>
 
-    <div class="my-structures"
-         data-angular-treeview="true"
-         data-tree-id="myStructure"
-         data-tree-model="structureData"
-         data-node-id="sId"
-         data-node-label="sNode"
-         data-node-children="children" >
+    <script id="room-structure.html" type="text/ng-template">
+      <ion-popover-view>
+        <ion-content>
+          <div class="my-structures"
+               data-angular-treeview="true"
+               data-tree-id="myStructure"
+               data-tree-model="structureData"
+               data-node-id="sId"
+               data-node-label="sNode"
+               data-node-children="children" >
 
-    </div>
+          </div>
+        </ion-content>
+      </ion-popover-view>
+    </script>
 
   </ion-content>
   <i class="add-item icon ion-plus-circled" ng-click="addItem()"></i>
