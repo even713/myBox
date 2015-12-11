@@ -52,12 +52,19 @@ angular.module('myBox.controllers')
       $scope.popover.show($(this));
     });
 
+    $("ion-header-bar .search.button").show().off("click").on("click", function(event){
+      window.location.hash = "#/myItems/searchItem";
+    });
+
     //Cleanup the popover when we're done with it!
     $scope.$on('$destroy', function() {
       $scope.popover.remove();
+      $("ion-header-bar>div.title").off("click");
+      $("ion-header-bar .search.button").hide();
     });
 
     function queryMyItems(roomId){
+      console.log(["searchForm", $scope.searchForm]);
       myBoxDB.queryMyItems(roomId, function(res){
         for(var i = 0; i < res.rows.length; i++) {
           $scope.myItems.push({goodsId:res.rows.item(i).goodsId, goodsName: res.rows.item(i).goodsName,
@@ -65,6 +72,10 @@ angular.module('myBox.controllers')
         }
       });
     }
+
+    $scope.searchItems = function(){
+      queryMyItems($scope.goodForm.roomId);
+    };
 
     $scope.addItem = function(){
       window.location.hash = "#/myItems/newItem";
@@ -98,6 +109,10 @@ angular.module('myBox.controllers')
       owner: null,
       note: null,
       photos: []
+    };
+
+    $scope.searchForm = {
+      keyWords: null
     };
 
     $scope.saveItem = function(){
@@ -280,5 +295,11 @@ console.log($cordovaCamera.getPicture);
       }
       console.log($scope.members);
     });
+  })
+  .controller('searchItemsCtrl', function($scope, myBoxDB){
+    $scope.search = function(){
+      window.location.hash = "#/myItems";
+      $scope.searchItems();
+    };
   })
 ;

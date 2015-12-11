@@ -131,6 +131,15 @@ angular.module('myBox', ['ionic', 'ngCordova', 'myBox.controllers', 'myBox.servi
         }
       }
     })
+    .state('myItems.searchItem', {
+      url: '/searchItem',
+      views: {
+        'myItems' :{
+          templateUrl: "views/myItems/myItems.search.html",
+          controller : "searchItemsCtrl"
+        }
+      }
+    })
 
   /* My Houses*/
   .state('myHouse', {

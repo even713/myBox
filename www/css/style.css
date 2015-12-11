@@ -11,6 +11,10 @@
   border-bottom: 1px solid #ddd;
 }
 
+ion-header-bar .search.button {
+  display: none;
+}
+
 
 /*my boxes page*/
 .my-boxes .boxes-container>div{
