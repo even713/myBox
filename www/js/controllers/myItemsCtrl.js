@@ -6,18 +6,18 @@ angular.module('myBox.controllers')
     $scope.structureData = [];
     var structData = {};
     myBoxDB.queryMyStructure(function(res){
+      // query order by depth desc, so small location first, then big location like bedroom, kitchen etc. "All" will be init at the last.
       for(var i = 0; i < res.rows.length; i++) {
         var parentId = res.rows.item(i).parentId;
-        if(parentId == 0) {
-          $scope.structureData.push({sNode: res.rows.item(i).sNode, sId: res.rows.item(i).sId, children: structData[res.rows.item(i).sId]});
-        } else {
           if(structData[parentId]) {
             structData[parentId].push({sNode: res.rows.item(i).sNode, sId: res.rows.item(i).sId, children: structData[res.rows.item(i).sId]});
           } else {
             structData[parentId] = [{sNode: res.rows.item(i).sNode, sId: res.rows.item(i).sId, children: structData[res.rows.item(i).sId]}];
           }
-        }
       }
+      $scope.structureData.push({sNode: "所有", sId: 0, children: structData[0]});
+
+      //console.log([$scope.structureData, structData]);
     });
 
     myBoxDB.queryDefaultRoom(function(rooms){
@@ -35,7 +35,7 @@ angular.module('myBox.controllers')
           $scope.goodForm.ownerId += "," + rooms.rows.item(i).memberId;
           $scope.goodForm.owner += "," + rooms.rows.item(i).memberName;
         }
-        queryMyItems($scope.goodForm.roomId);
+        queryMyItems();
       } else {
         window.location.hash = "#/myBoxes"; // If there's no room yet, redirect user.
       }
@@ -56,6 +56,12 @@ angular.module('myBox.controllers')
       window.location.hash = "#/myItems/searchItem";
     });
 
+    $scope.$on('onStructureSelected', function (event, sId) {
+      $scope.popover.hide();
+      $scope.searchForm.sId = sId;
+      queryMyItems();
+    });
+
     //Cleanup the popover when we're done with it!
     $scope.$on('$destroy', function() {
       $scope.popover.remove();
@@ -63,9 +69,12 @@ angular.module('myBox.controllers')
       $("ion-header-bar .search.button").hide();
     });
 
-    function queryMyItems(roomId){
-      console.log(["searchForm", $scope.searchForm]);
-      myBoxDB.queryMyItems(roomId, function(res){
+    function queryMyItems(){
+      var roomId = $scope.goodForm.roomId;
+      var keywords = $scope.searchForm.keyWords || "";
+      var sId = $scope.searchForm.sId;
+      myBoxDB.queryMyItems(roomId, keywords, sId, function(res){
+        $scope.myItems = [];
         for(var i = 0; i < res.rows.length; i++) {
           $scope.myItems.push({goodsId:res.rows.item(i).goodsId, goodsName: res.rows.item(i).goodsName,
             location: res.rows.item(i).sNode, photo: res.rows.item(i).filePath, note: res.rows.item(i).note});
@@ -74,7 +83,7 @@ angular.module('myBox.controllers')
     }
 
     $scope.searchItems = function(){
-      queryMyItems($scope.goodForm.roomId);
+      queryMyItems();
     };
 
     $scope.addItem = function(){
@@ -112,7 +121,8 @@ angular.module('myBox.controllers')
     };
 
     $scope.searchForm = {
-      keyWords: null
+      keyWords: null,
+      sId: null
     };
 
     $scope.saveItem = function(){
@@ -301,5 +311,13 @@ console.log($cordovaCamera.getPicture);
       window.location.hash = "#/myItems";
       $scope.searchItems();
     };
+  })
+  // a child scope ctrl witch shows the room structure and broadcast the selected node when user select
+  .controller('myRoomStructureCtrl', function($scope, myBoxDB){
+    $scope.$watch('myStructure.currentNode', function(newNode, oldNode){
+      if(!newNode)
+        return;
+      $scope.$emit('onStructureSelected', newNode.sId);
+    });
   })
 ;

@@ -8,10 +8,9 @@
         <p>{{item.note}}</p>
       </a>
     </div>
-
     <script id="room-structure.html" type="text/ng-template">
       <ion-popover-view>
-        <ion-content>
+        <ion-content ng-controller="myRoomStructureCtrl">
           <div class="my-structures"
                data-angular-treeview="true"
                data-tree-id="myStructure"
